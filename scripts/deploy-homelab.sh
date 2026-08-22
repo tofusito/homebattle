@@ -2,11 +2,19 @@
 
 set -euo pipefail
 
-readonly IMAGE="${1:?Usage: deploy-homelab.sh <image>}"
+readonly BRANCH="${1:-main}"
+readonly REPOSITORY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly STACK_DIR="/home/tofu/docker/dockerhand/data/stacks/Homelab/happy-home"
 readonly RUNTIME_DIR="/home/tofu/docker/happy-home/deploy"
 readonly VAPID_FILE="${RUNTIME_DIR}/vapid.env"
-readonly OVERRIDE_FILE="${RUNTIME_DIR}/compose.override.yaml"
+readonly OVERRIDE_FILE="${REPOSITORY_DIR}/deploy/homelab.compose.override.yaml"
+readonly LOCK_FILE="${RUNTIME_DIR}/deploy.lock"
+
+exec 9>"${LOCK_FILE}"
+if ! flock -n 9; then
+  echo "Another Happy Home deployment is already running." >&2
+  exit 1
+fi
 
 get_container_env() {
   local container="$1"
@@ -45,10 +53,25 @@ wait_for_health() {
   return 1
 }
 
-docker image inspect "${IMAGE}" >/dev/null
+if [[ -n "$(git -C "${REPOSITORY_DIR}" status --porcelain)" ]]; then
+  echo "The server checkout contains local changes; refusing to overwrite them." >&2
+  exit 1
+fi
 
+git -C "${REPOSITORY_DIR}" pull --ff-only origin "${BRANCH}"
+
+readonly REVISION="$(git -C "${REPOSITORY_DIR}" rev-parse HEAD)"
+readonly SHORT_REVISION="$(git -C "${REPOSITORY_DIR}" rev-parse --short=12 HEAD)"
+readonly IMAGE="homebattle:${SHORT_REVISION}"
 readonly PREVIOUS_IMAGE="$(docker inspect --format '{{.Config.Image}}' happy-home)"
+
 require_value "previous image" "${PREVIOUS_IMAGE}"
+
+docker build \
+  --pull \
+  --label "org.opencontainers.image.revision=${REVISION}" \
+  --tag "${IMAGE}" \
+  "${REPOSITORY_DIR}"
 
 export TZ="$(get_container_env happy-home TZ)"
 export SITE_URL="$(get_container_env happy-home SITE_URL)"
@@ -68,8 +91,6 @@ require_value "MONGO_APP_PASSWORD" "${MONGO_APP_PASSWORD}"
 require_value "MONGO_ROOT_USERNAME" "${MONGO_ROOT_USERNAME}"
 require_value "MONGO_ROOT_PASSWORD" "${MONGO_ROOT_PASSWORD}"
 require_value "TUNNEL_TOKEN" "${TUNNEL_TOKEN}"
-
-install -d -m 700 "${RUNTIME_DIR}"
 
 if [[ -s "${VAPID_FILE}" ]]; then
   # shellcheck disable=SC1090
@@ -92,12 +113,6 @@ else
 fi
 
 export VAPID_SUBJECT VAPID_PUBLIC_KEY VAPID_PRIVATE_KEY
-
-if [[ ! -f "${OVERRIDE_FILE}" ]]; then
-  echo "Missing Compose override: ${OVERRIDE_FILE}" >&2
-  exit 1
-fi
-chmod 600 "${OVERRIDE_FILE}"
 
 deploy_image() {
   local image="$1"
@@ -125,4 +140,4 @@ if ! deploy_image "${IMAGE}" || ! wait_for_health; then
   exit 1
 fi
 
-echo "Happy Home is healthy on ${IMAGE}."
+echo "Happy Home is healthy on ${IMAGE} (${REVISION})."

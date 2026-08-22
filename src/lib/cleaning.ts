@@ -714,7 +714,7 @@ export function completionsThisWeek(completions: Completion[], date = new Date()
   );
 }
 
-export function leagueBucket(task: Task, completion: Completion): string {
+function leagueBucket(task: Task, completion: Completion): string {
   const dateKey = localDateKey(new Date(completion.completedAt));
   if (task.schedule.type === "weekly" || task.schedule.type === "on_demand_weekly") {
     return mondayKey(dateKey);
@@ -982,28 +982,4 @@ export function startOfMonth(date = new Date()): Date {
   result.setHours(0, 0, 0, 0);
   result.setDate(1);
   return result;
-}
-
-export function weekStreak(completions: Completion[], personId?: PersonId): number {
-  const rows = completions.filter(
-    (completion) =>
-      !completion.undoneAt &&
-      !completion.skipped &&
-      (!personId || completion.personId === personId),
-  );
-  const weeks = new Set(rows.map((row) => mondayKey(localDateKey(new Date(row.completedAt)))));
-  let cursor = mondayKey(localDateKey());
-  if (!weeks.has(cursor)) {
-    const previous = new Date(`${cursor}T12:00:00Z`);
-    previous.setUTCDate(previous.getUTCDate() - 7);
-    cursor = previous.toISOString().slice(0, 10);
-  }
-  let streak = 0;
-  while (weeks.has(cursor)) {
-    streak += 1;
-    const previous = new Date(`${cursor}T12:00:00Z`);
-    previous.setUTCDate(previous.getUTCDate() - 7);
-    cursor = previous.toISOString().slice(0, 10);
-  }
-  return streak;
 }

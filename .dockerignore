@@ -6,3 +6,8 @@
 .output
 node_modules
 *.log
+*.md
+LICENSE
+deploy
+scripts
+src/**/*.test.ts
