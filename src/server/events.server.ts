@@ -42,3 +42,14 @@ export function publishCleaningChange(): void {
   const message = `event: cleaning\ndata: ${Date.now()}\n\n`;
   for (const controller of clients) send(controller, message);
 }
+
+export function closeAllEventStreams(): void {
+  for (const controller of clients) {
+    try {
+      controller.close();
+    } catch {
+      // El stream ya estaba cerrado por el cliente.
+    }
+  }
+  clients.clear();
+}

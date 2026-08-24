@@ -28,6 +28,10 @@ import {
 const QUERY_KEY = ["cleaning-data"] as const;
 const CACHE_KEY = "happy-home:data-cache";
 
+// El intervalo de 30 s y el evento "online" pueden coincidir; este flag evita
+// que dos flushes recorran la cola a la vez y dupliquen peticiones.
+let flushingQueue = false;
+
 function cacheData(data: CleaningData): void {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(CACHE_KEY, JSON.stringify(data));
@@ -342,7 +346,17 @@ export function useLiveSync(): {
       setBlocked(readQueue().some((operation) => Boolean(operation.lastError)));
     };
     const flush = async () => {
-      if (!navigator.onLine) return;
+      if (!navigator.onLine || flushingQueue) return;
+      flushingQueue = true;
+      try {
+        await flushQueue();
+      } finally {
+        flushingQueue = false;
+      }
+      update();
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    };
+    const flushQueue = async () => {
       for (const operation of readQueue()) {
         try {
           if (operation.type === "complete") {
@@ -376,8 +390,6 @@ export function useLiveSync(): {
           break;
         }
       }
-      update();
-      void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     };
     update();
     void flush();

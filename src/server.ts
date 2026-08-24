@@ -2,9 +2,33 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
-import { pingDatabase } from "./server/database.server";
-import { cleaningEventResponse } from "./server/events.server";
+import { closeDatabase, pingDatabase } from "./server/database.server";
+import { cleaningEventResponse, closeAllEventStreams } from "./server/events.server";
 import { startReminderScheduler } from "./server/reminders.server";
+
+let shutdownRegistered = false;
+
+function registerGracefulShutdown(): void {
+  if (shutdownRegistered || typeof process === "undefined") return;
+  shutdownRegistered = true;
+  const cleanup = () => {
+    closeAllEventStreams();
+    void closeDatabase();
+  };
+  process.once("SIGTERM", cleanup);
+  process.once("SIGINT", cleanup);
+}
+
+function withSecurityHeaders(response: Response): Response {
+  const headers = new Headers(response.headers);
+  headers.set("x-content-type-options", "nosniff");
+  headers.set("referrer-policy", "strict-origin-when-cross-origin");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -50,6 +74,7 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      registerGracefulShutdown();
       startReminderScheduler();
       const url = new URL(request.url);
       if (url.pathname === "/healthz") {
@@ -61,12 +86,16 @@ export default {
       }
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response));
     } catch (error) {
       console.error(error);
       return new Response(renderErrorPage(), {
         status: 500,
-        headers: { "content-type": "text/html; charset=utf-8" },
+        headers: {
+          "content-type": "text/html; charset=utf-8",
+          "x-content-type-options": "nosniff",
+          "referrer-policy": "strict-origin-when-cross-origin",
+        },
       });
     }
   },

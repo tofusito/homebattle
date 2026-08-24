@@ -117,7 +117,20 @@ function mongoUri(): string {
 }
 
 async function database(): Promise<Db> {
-  clientPromise ??= new MongoClient(mongoUri(), { maxPoolSize: 8, minPoolSize: 1 }).connect();
+  clientPromise ??= new MongoClient(mongoUri(), {
+    maxPoolSize: 8,
+    minPoolSize: 1,
+    serverSelectionTimeoutMS: 5_000,
+    connectTimeoutMS: 5_000,
+    appName: "happy-home",
+  })
+    .connect()
+    .catch((error: unknown) => {
+      // Una promesa rechazada cacheada dejaría la app rota para siempre;
+      // se descarta para que el siguiente request vuelva a intentar conectar.
+      clientPromise = undefined;
+      throw error;
+    });
   const client = await clientPromise;
   return client.db(required("MONGODB_DATABASE"));
 }
@@ -140,44 +153,74 @@ async function upsertValues<T extends { id: string }>(
 async function readyDatabase(): Promise<Db> {
   seededPromise ??= (async () => {
     const db = await database();
-    await Promise.all([
-      upsertValues<Person>(values(db, "people"), PEOPLE),
-      upsertValues<Zone>(values(db, "zones"), ZONES),
-      upsertValues<Task>(values(db, "tasks"), TASKS),
-      db.collection<StoredCompletion>("completions").createIndex({ completedAt: -1 }),
-      db.collection<StoredCompletion>("completions").createIndex({ taskId: 1, completedAt: -1 }),
-      db.collection<StoredReward>("rewards").createIndex({ earnedBy: 1, earnedAt: -1 }),
-      db.collection<StoredPushSubscription>("pushSubscriptions").createIndex({ personId: 1 }),
-      values<HouseholdSettings>(db, "settings").updateOne(
-        { _id: "household" },
-        { $setOnInsert: { value: DEFAULT_SETTINGS } },
-        { upsert: true },
-      ),
-    ]);
-    for (const completion of INITIAL_COMPLETIONS) {
-      await db.collection<StoredCompletion>("completions").updateOne(
-        { _id: completion.id },
-        {
-          $setOnInsert: {
-            taskId: completion.taskId,
-            personId: completion.personId,
-            completedAt: new Date(completion.completedAt),
-          },
-          ...(completion.reportedPeriod
-            ? { $set: { reportedPeriod: completion.reportedPeriod } }
-            : {}),
-        },
-        { upsert: true },
-      );
+    try {
+      await seedDatabase(db);
+    } catch (error) {
+      seededPromise = undefined;
+      throw error;
     }
     return db;
   })();
   return seededPromise;
 }
 
+async function seedDatabase(db: Db): Promise<void> {
+  await Promise.all([
+    upsertValues<Person>(values(db, "people"), PEOPLE),
+    upsertValues<Zone>(values(db, "zones"), ZONES),
+    upsertValues<Task>(values(db, "tasks"), TASKS),
+    db.collection<StoredCompletion>("completions").createIndex({ completedAt: -1 }),
+    db.collection<StoredCompletion>("completions").createIndex({ taskId: 1, completedAt: -1 }),
+    db.collection<StoredReward>("rewards").createIndex({ earnedBy: 1, earnedAt: -1 }),
+    db.collection<StoredPushSubscription>("pushSubscriptions").createIndex({ personId: 1 }),
+    values<HouseholdSettings>(db, "settings").updateOne(
+      { _id: "household" },
+      { $setOnInsert: { value: DEFAULT_SETTINGS } },
+      { upsert: true },
+    ),
+  ]);
+  for (const completion of INITIAL_COMPLETIONS) {
+    await db.collection<StoredCompletion>("completions").updateOne(
+      { _id: completion.id },
+      {
+        $setOnInsert: {
+          taskId: completion.taskId,
+          personId: completion.personId,
+          completedAt: new Date(completion.completedAt),
+        },
+        ...(completion.reportedPeriod
+          ? { $set: { reportedPeriod: completion.reportedPeriod } }
+          : {}),
+      },
+      { upsert: true },
+    );
+  }
+}
+
+export async function closeDatabase(): Promise<void> {
+  const pending = clientPromise;
+  clientPromise = undefined;
+  seededPromise = undefined;
+  if (!pending) return;
+  try {
+    const client = await pending;
+    await client.close();
+  } catch {
+    // El cliente nunca llegó a conectar; no hay nada que cerrar.
+  }
+}
+
 export async function pingDatabase(): Promise<void> {
   const db = await readyDatabase();
   await db.command({ ping: 1 });
+}
+
+// Ventana de histórico enviada al cliente. Cubre de sobra la liga semanal,
+// las rotaciones y las rachas; evita que el payload crezca sin límite con los años.
+export const HISTORY_WINDOW_DAYS = 120;
+
+export function historyWindowStart(now = new Date()): Date {
+  return new Date(now.getTime() - HISTORY_WINDOW_DAYS * 24 * 60 * 60 * 1_000);
 }
 
 export async function readCleaningData(): Promise<CleaningData> {
@@ -188,7 +231,7 @@ export async function readCleaningData(): Promise<CleaningData> {
     values<Task>(db, "tasks").find().toArray(),
     db
       .collection<StoredCompletion>("completions")
-      .find()
+      .find({ completedAt: { $gte: historyWindowStart() } })
       .sort({ completedAt: -1 })
       .limit(5_000)
       .toArray(),
@@ -614,6 +657,12 @@ async function ensureWeeklyReward(
   completedAt: Date,
 ): Promise<RewardVoucher | null> {
   const weekStart = startOfWeek(completedAt);
+  // Si la semana ya tiene premio no puede ganarse otra vez: evita reescanear
+  // las completions de la semana en cada lectura.
+  const existingWeekly = await db
+    .collection<StoredReward>("rewards")
+    .findOne({ _id: `weekly-${mondayKey(localDateKey(completedAt))}` });
+  if (existingWeekly) return null;
   const rows = await db
     .collection<StoredCompletion>("completions")
     .find({ completedAt: { $gte: weekStart }, undoneAt: { $exists: false } })
