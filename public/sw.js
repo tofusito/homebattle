@@ -1,4 +1,4 @@
-const CACHE = "happy-home-v6";
+const CACHE = "happy-home-v7";
 // Con red lenta no esperamos al timeout del sistema: pasado este margen se
 // sirve el shell cacheado y la red sigue su curso en segundo plano.
 const NAVIGATION_TIMEOUT_MS = 3500;
@@ -13,7 +13,12 @@ const SHELL = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)));
-  self.skipWaiting();
+});
+
+// La versión nueva espera a que la página lo pida (toast "Actualizar"),
+// en vez de activarse a mitad de sesión.
+self.addEventListener("message", (event) => {
+  if (event.data === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {

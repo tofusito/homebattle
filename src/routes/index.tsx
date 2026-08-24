@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { lazy, Suspense, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Confetti } from "@/components/Confetti";
@@ -55,6 +55,8 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+const LAST_TAB_KEY = "happy-home:last-tab";
+
 function Index() {
   const dataQuery = useCleaningData();
   const data = dataQuery.data ?? {
@@ -74,6 +76,15 @@ function Index() {
   const pushReminders = usePushReminders(person);
   const sync = useLiveSync();
   const [tab, setTab] = useState<Tab>("hoy");
+  // Recupera la última pestaña tras montar (no en el init para no desajustar la hidratación).
+  useEffect(() => {
+    const saved = window.localStorage.getItem(LAST_TAB_KEY);
+    if (saved === "zonas" || saved === "liga" || saved === "perfil") setTab(saved);
+  }, []);
+  const changeTab = (next: Tab) => {
+    setTab(next);
+    window.localStorage.setItem(LAST_TAB_KEY, next);
+  };
   const [profileSection, setProfileSection] = useState<"rewards" | "history">("rewards");
   const [confetti, setConfetti] = useState(0);
   const [pendingRescueStateKey, setPendingRescueStateKey] = useState<string | null>(null);
@@ -140,7 +151,7 @@ function Index() {
               () =>
                 toast.success(`${rewardEarned.emoji} ¡Vale semanal conseguido!`, {
                   description: `${rewardEarned.title} ya está guardado en tu Perfil.`,
-                  action: { label: "Ver", onClick: () => setTab("perfil") },
+                  action: { label: "Ver", onClick: () => changeTab("perfil") },
                 }),
               500,
             );
@@ -239,7 +250,7 @@ function Index() {
               currentPerson={person}
               onViewHistory={() => {
                 setProfileSection("history");
-                setTab("perfil");
+                changeTab("perfil");
               }}
             />
             <PreferencesDialog
@@ -265,8 +276,8 @@ function Index() {
               current={current}
               onDone={handleDone}
               onSkip={handleSkip}
-              onOpenLiga={() => setTab("liga")}
-              onOpenZonas={() => setTab("zonas")}
+              onOpenLiga={() => changeTab("liga")}
+              onOpenZonas={() => changeTab("zonas")}
             />
           ) : tab === "zonas" ? (
             <Suspense fallback={<TabFallback />}>
@@ -328,7 +339,7 @@ function Index() {
         onConfirm={(state) => completeTask(state, true)}
       />
 
-      <BottomNav tab={tab} onChange={setTab} />
+      <BottomNav tab={tab} onChange={changeTab} />
     </div>
   );
 }
