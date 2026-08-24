@@ -76,7 +76,10 @@ export function useCleaningData() {
         throw error;
       }
     },
-    refetchInterval: 60_000,
+    // Pinta al instante el último snapshot guardado mientras llega la respuesta.
+    placeholderData: () => cachedData(),
+    // El SSE ya avisa de los cambios al momento; el intervalo es solo red de seguridad.
+    refetchInterval: 300_000,
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
