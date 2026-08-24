@@ -32,6 +32,7 @@ import {
   type Zone,
   WEEKLY_DUEL_TARGET,
 } from "@/lib/cleaning";
+import { StatsSection } from "@/components/StatsSection";
 import { streakCopy } from "@/lib/copy";
 import { cn } from "@/lib/utils";
 
@@ -354,6 +355,8 @@ export function Scoreboard({
           </p>
         ) : null}
       </div>
+
+      <StatsSection completions={completions} tasks={tasks} zones={zones} people={people} />
     </section>
   );
 }
