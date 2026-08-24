@@ -43,6 +43,10 @@ export function publishCleaningChange(): void {
   for (const controller of clients) send(controller, message);
 }
 
+export function sseClientCount(): number {
+  return clients.size;
+}
+
 export function closeAllEventStreams(): void {
   for (const controller of clients) {
     try {
