@@ -14,10 +14,12 @@ import { STATUS_COPY } from "@/lib/copy";
 import { cn } from "@/lib/utils";
 
 const RING = {
-  fresh: "border-fresh/35 bg-fresh-soft/45",
-  later: "border-later/35 bg-later-soft/60",
-  soon: "border-soon/40 bg-soon-soft/55",
-  late: "border-late/40 bg-late-soft/55",
+  // El estado se lee en el punto de color y el texto; la tarjeta se mantiene
+  // limpia y el color queda como acento en el borde.
+  fresh: "border-fresh/25 bg-card",
+  later: "border-later/25 bg-card",
+  soon: "border-soon/30 bg-card",
+  late: "border-late/35 bg-card",
   on_demand: "border-border bg-card",
 };
 const DOT = {
@@ -75,7 +77,7 @@ export function TaskCard({
     <article
       className={cn(
         "animate-rise-in card-soft tap-shrink relative overflow-hidden rounded-2xl p-4",
-        rescued ? "border-rescue/35 bg-rescue-soft/55" : RING[status],
+        rescued ? "border-rescue/35 bg-rescue-soft/25" : RING[status],
       )}
       style={{ animationDelay: `${Math.min(index * 45, 400)}ms` }}
     >

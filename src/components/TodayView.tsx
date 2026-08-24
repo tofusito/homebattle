@@ -95,7 +95,7 @@ export function TodayView({
       />
 
       {orderedGraceStates.length > 0 ? (
-        <div className="rounded-3xl border border-late/20 bg-late-soft/35 p-4">
+        <div className="rounded-3xl border border-late/10 bg-late-soft/30 p-4">
           <SectionTitle
             title="Tiempo de descuento"
             subtitle="Podéis cerrarlas durante todo el día de hoy. Se guardan y puntúan con la fecha de ayer."
@@ -118,7 +118,7 @@ export function TodayView({
       ) : null}
 
       {laundryReady.length > 0 ? (
-        <div className="rounded-3xl border border-primary/15 bg-primary/5 p-4">
+        <div className="rounded-3xl border border-border/70 bg-card/70 p-4">
           <SectionTitle
             title="Ropa lista"
             subtitle="Tiene un turno claro, pero cualquiera puede recogerla y doblarla."
@@ -200,7 +200,7 @@ export function TodayView({
       ) : null}
 
       {todayDone.length > 0 ? (
-        <details className="group rounded-3xl border border-fresh/20 bg-fresh-soft/35 px-4 py-3.5">
+        <details className="group rounded-3xl border border-fresh/10 bg-fresh-soft/30 px-4 py-3.5">
           <summary className="flex cursor-pointer list-none items-center gap-3 text-sm font-semibold text-fresh">
             <span>
               ✓ {todayDone.length}{" "}
