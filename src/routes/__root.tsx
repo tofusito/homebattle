@@ -84,7 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         name: "description",
         content: "Labores de casa gamificadas para Lucy y Manu.",
       },
-      { name: "theme-color", content: "#f7f1e6" },
+      { name: "theme-color", content: "#f7f5f9" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "Happy Home" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },

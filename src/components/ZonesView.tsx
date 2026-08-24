@@ -76,8 +76,8 @@ export function ZonesView({
                 className={cn(
                   "animate-rise-in rounded-3xl border p-4",
                   person.id === "lucy"
-                    ? "border-lucy/20 bg-lucy-soft/35"
-                    : "border-manu/20 bg-manu-soft/35",
+                    ? "border-lucy/20 bg-lucy-soft/55"
+                    : "border-manu/20 bg-manu-soft/55",
                   person.id === currentPerson && "ring-2 ring-primary/15",
                 )}
                 style={{ animationDelay: `${index * 55}ms` }}

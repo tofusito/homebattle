@@ -1,4 +1,5 @@
 import { Sparkles } from "lucide-react";
+import type { CSSProperties } from "react";
 
 import type { Person } from "@/lib/cleaning";
 import { cn } from "@/lib/utils";
@@ -41,9 +42,14 @@ export function TodayHero({
 
   return (
     <section
+      style={
+        {
+          "--hero-tint": person.id === "lucy" ? "var(--lucy-soft)" : "var(--manu-soft)",
+        } as CSSProperties
+      }
       className={cn(
-        "hero-wash animate-rise-in relative overflow-hidden rounded-[2rem] border p-5 shadow-sm sm:p-6",
-        person.id === "lucy" ? "border-lucy/20" : "border-manu/20",
+        "hero-wash animate-rise-in relative overflow-hidden rounded-3xl border p-5 shadow-sm sm:p-6",
+        person.id === "lucy" ? "border-lucy/15" : "border-manu/15",
       )}
     >
       <div className="relative z-10 max-w-[75%]">
