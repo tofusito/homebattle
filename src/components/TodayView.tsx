@@ -78,7 +78,7 @@ export function TodayView({
   );
 
   return (
-    <section className="space-y-5">
+    <section className="space-y-8">
       <TodayHero
         person={current}
         ownPending={ownPending.length + ownLaundryPending + ownGrace}
@@ -95,7 +95,7 @@ export function TodayView({
       />
 
       {orderedGraceStates.length > 0 ? (
-        <div className="rounded-3xl border border-late/10 bg-late-soft/30 p-4">
+        <div>
           <SectionTitle
             title="Tiempo de descuento"
             subtitle="Podéis cerrarlas durante todo el día de hoy. Se guardan y puntúan con la fecha de ayer."
@@ -118,7 +118,7 @@ export function TodayView({
       ) : null}
 
       {laundryReady.length > 0 ? (
-        <div className="rounded-3xl border border-border/70 bg-card/70 p-4">
+        <div>
           <SectionTitle
             title="Ropa lista"
             subtitle="Tiene un turno claro, pero cualquiera puede recogerla y doblarla."
@@ -346,8 +346,10 @@ function Task({
 function SectionTitle({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="animate-rise-in">
-      <h2 className="text-xl font-semibold">{title}</h2>
-      <p className="text-sm text-muted-foreground">{subtitle}</p>
+      <h2 className="text-[0.7rem] font-bold tracking-[0.16em] text-muted-foreground uppercase">
+        {title}
+      </h2>
+      <p className="mt-1 text-sm text-muted-foreground/80">{subtitle}</p>
     </div>
   );
 }
