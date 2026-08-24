@@ -3,7 +3,11 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { closeDatabase, pingDatabase } from "./server/database.server";
-import { cleaningEventResponse, closeAllEventStreams } from "./server/events.server";
+import {
+  cleaningEventResponse,
+  closeAllEventStreams,
+  sseClientCount,
+} from "./server/events.server";
 import { startReminderScheduler } from "./server/reminders.server";
 
 let shutdownRegistered = false;
@@ -79,6 +83,13 @@ export default {
       const url = new URL(request.url);
       if (url.pathname === "/healthz") {
         await pingDatabase();
+        if (url.searchParams.get("verbose") === "1") {
+          return Response.json({
+            status: "ok",
+            uptimeSeconds: Math.round(process.uptime()),
+            sseClients: sseClientCount(),
+          });
+        }
         return new Response("ok", { headers: { "content-type": "text/plain; charset=utf-8" } });
       }
       if (url.pathname === "/api/events" && request.method === "GET") {
