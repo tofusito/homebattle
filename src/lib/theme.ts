@@ -1,8 +1,8 @@
 export type ThemePreference = "system" | "light" | "dark";
 
 // Deben coincidir con --background de styles.css en cada tema.
-export const THEME_COLOR_LIGHT = "#f7f1e6";
-export const THEME_COLOR_DARK = "#221c15";
+export const THEME_COLOR_LIGHT = "#f7f5f9";
+export const THEME_COLOR_DARK = "#141317";
 
 export function resolveDark(theme: ThemePreference): boolean {
   if (theme === "dark") return true;
