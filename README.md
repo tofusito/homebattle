@@ -13,7 +13,7 @@ bun install
 bun run dev
 ```
 
-Quality checks:
+Quality checks (also enforced by GitHub Actions on every push and pull request):
 
 ```sh
 bun run typecheck
@@ -22,6 +22,8 @@ bun run lint
 bun run build
 bun audit --production
 ```
+
+When the cached app shell changes (icons, manifest, offline fallback), bump the `CACHE` version constant in `public/sw.js` so installed PWAs refresh their cache.
 
 ## Production
 

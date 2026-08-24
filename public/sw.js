@@ -1,4 +1,4 @@
-const CACHE = "happy-home-v4";
+const CACHE = "happy-home-v5";
 const SHELL = [
   "/",
   "/manifest.webmanifest",
@@ -33,8 +33,10 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(request, copy));
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE).then((cache) => cache.put(request, copy));
+          }
           return response;
         })
         .catch(async () => (await caches.match(request)) || caches.match("/")),

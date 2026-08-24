@@ -127,10 +127,14 @@
 
   html {
     -webkit-tap-highlight-color: transparent;
+    /* Color sólido: iOS lo usa para pintar la barra de estado del PWA y el
+       rebote del scroll; con solo el degradado del body caía a blanco. */
+    background-color: var(--background);
   }
 
   body {
-    background: var(--gradient-paper);
+    background-color: var(--background);
+    background-image: var(--gradient-paper);
     background-attachment: fixed;
     color: var(--color-foreground);
     font-family: var(--font-sans);
