@@ -31,7 +31,7 @@ export function RescueDialog({
         if (!open) onCancel();
       }}
     >
-      <AlertDialogContent className="max-w-sm rounded-[2rem] border-rescue/25 bg-card p-5">
+      <AlertDialogContent className="max-w-sm rounded-3xl border-rescue/25 bg-card p-5">
         <AlertDialogHeader className="text-left">
           <div className="mb-1 grid size-12 place-items-center rounded-2xl bg-rescue-soft text-2xl">
             ✨

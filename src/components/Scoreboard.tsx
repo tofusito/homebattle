@@ -108,7 +108,7 @@ export function Scoreboard({
 
   return (
     <section className="space-y-4">
-      <div className="animate-rise-in duel-card relative overflow-hidden rounded-[2rem] p-5 sm:p-6">
+      <div className="animate-rise-in duel-card relative overflow-hidden rounded-3xl p-5 sm:p-6">
         <div className="relative z-10 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Swords className="size-4 text-primary" />

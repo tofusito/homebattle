@@ -65,63 +65,63 @@
 :root {
   --radius: 1.1rem;
 
-  --background: oklch(0.968 0.018 85.5);
-  --paper: oklch(0.986 0.012 88);
+  --background: oklch(0.963 0.014 85);
+  --paper: oklch(0.995 0.006 88);
   --foreground: oklch(0.265 0.035 45);
 
-  --card: oklch(0.988 0.011 88);
+  --card: oklch(0.995 0.006 88);
   --card-foreground: oklch(0.265 0.035 45);
-  --popover: oklch(0.988 0.011 88);
+  --popover: oklch(0.995 0.006 88);
   --popover-foreground: oklch(0.265 0.035 45);
 
-  --primary: oklch(0.585 0.155 38);
+  --primary: oklch(0.56 0.155 35);
   --primary-foreground: oklch(0.985 0.012 88);
 
-  --secondary: oklch(0.936 0.02 84);
-  --secondary-foreground: oklch(0.34 0.05 45);
+  --secondary: oklch(0.936 0.018 84);
+  --secondary-foreground: oklch(0.34 0.045 45);
 
-  --muted: oklch(0.935 0.02 85);
-  --muted-foreground: oklch(0.52 0.03 55);
+  --muted: oklch(0.945 0.013 85);
+  --muted-foreground: oklch(0.53 0.025 60);
 
-  --accent: oklch(0.62 0.105 148);
+  --accent: oklch(0.56 0.115 155);
   --accent-foreground: oklch(0.985 0.012 88);
 
-  --destructive: oklch(0.55 0.185 25);
+  --destructive: oklch(0.51 0.175 30);
   --destructive-foreground: oklch(0.985 0.012 88);
 
-  --border: oklch(0.905 0.018 80);
-  --input: oklch(0.905 0.018 80);
-  --ring: oklch(0.585 0.155 38);
+  --border: oklch(0.906 0.014 80);
+  --input: oklch(0.906 0.014 80);
+  --ring: oklch(0.56 0.155 35);
 
-  --fresh: oklch(0.55 0.115 150);
-  --fresh-soft: oklch(0.945 0.032 150);
-  --soon: oklch(0.66 0.135 78);
-  --soon-soft: oklch(0.952 0.04 88);
-  --later: oklch(0.57 0.09 235);
-  --later-soft: oklch(0.95 0.022 235);
-  --late: oklch(0.545 0.185 25);
-  --late-soft: oklch(0.948 0.03 30);
+  --fresh: oklch(0.56 0.115 155);
+  --fresh-soft: oklch(0.952 0.028 155);
+  --soon: oklch(0.68 0.135 85);
+  --soon-soft: oklch(0.955 0.038 85);
+  --later: oklch(0.58 0.016 75);
+  --later-soft: oklch(0.948 0.008 80);
+  --late: oklch(0.51 0.175 30);
+  --late-soft: oklch(0.949 0.032 30);
 
-  --lucy: oklch(0.6 0.145 350);
-  --lucy-soft: oklch(0.952 0.028 350);
-  --manu: oklch(0.55 0.12 235);
-  --manu-soft: oklch(0.948 0.025 235);
-  --rescue: oklch(0.57 0.135 72);
-  --rescue-soft: oklch(0.954 0.038 84);
+  --lucy: oklch(0.6 0.135 350);
+  --lucy-soft: oklch(0.944 0.04 352);
+  --manu: oklch(0.54 0.115 245);
+  --manu-soft: oklch(0.936 0.05 245);
+  --rescue: oklch(0.6 0.14 68);
+  --rescue-soft: oklch(0.953 0.038 72);
 
-  /* Pasos de los tonos lucy/manu afinados para marcas de gráfico: más
-     separación de luminosidad (validados para visión protán/deután). */
-  --chart-lucy: oklch(0.66 0.14 350);
-  --chart-manu: oklch(0.47 0.115 235);
+  /* Pasos de los tonos de identidad afinados para marcas de gráfico:
+     más separación de luminosidad, validados para visión protán/deután. */
+  --chart-lucy: oklch(0.66 0.14 352);
+  --chart-manu: oklch(0.47 0.115 245);
 
   --shadow-soft: 0 1px 2px oklch(0.35 0.05 45 / 0.04), 0 8px 24px -12px oklch(0.35 0.05 45 / 0.13);
   --shadow-lift: 0 2px 4px oklch(0.35 0.05 45 / 0.05), 0 18px 40px -18px oklch(0.35 0.05 45 / 0.2);
-  --gradient-warm: linear-gradient(145deg, oklch(0.63 0.15 42), oklch(0.7 0.13 68));
+  --gradient-warm: linear-gradient(145deg, oklch(0.6 0.15 38), oklch(0.68 0.13 62));
   --gradient-paper: radial-gradient(
     120% 90% at 12% 0%,
-    oklch(0.98 0.03 92) 0%,
-    oklch(0.962 0.02 82) 55%,
-    oklch(0.945 0.026 70) 100%
+    oklch(0.975 0.016 88) 0%,
+    oklch(0.963 0.014 85) 60%,
+    oklch(0.953 0.014 78) 100%
   );
 
   color-scheme: light;
@@ -132,60 +132,60 @@
  * de gris corporativo; los acentos suben de luminosidad para mantener contraste.
  */
 .dark {
-  --background: oklch(0.215 0.018 60);
-  --paper: oklch(0.245 0.018 60);
+  --background: oklch(0.208 0.014 60);
+  --paper: oklch(0.262 0.016 58);
   --foreground: oklch(0.925 0.015 85);
 
-  --card: oklch(0.258 0.02 58);
+  --card: oklch(0.262 0.016 58);
   --card-foreground: oklch(0.925 0.015 85);
-  --popover: oklch(0.258 0.02 58);
+  --popover: oklch(0.262 0.016 58);
   --popover-foreground: oklch(0.925 0.015 85);
 
-  --primary: oklch(0.68 0.145 40);
-  --primary-foreground: oklch(0.17 0.02 45);
+  --primary: oklch(0.7 0.145 38);
+  --primary-foreground: oklch(0.18 0.02 45);
 
-  --secondary: oklch(0.305 0.022 58);
-  --secondary-foreground: oklch(0.89 0.02 80);
+  --secondary: oklch(0.308 0.018 58);
+  --secondary-foreground: oklch(0.89 0.018 80);
 
-  --muted: oklch(0.295 0.02 58);
-  --muted-foreground: oklch(0.68 0.022 70);
+  --muted: oklch(0.298 0.016 58);
+  --muted-foreground: oklch(0.7 0.02 70);
 
-  --accent: oklch(0.68 0.1 148);
-  --accent-foreground: oklch(0.17 0.02 45);
+  --accent: oklch(0.66 0.105 155);
+  --accent-foreground: oklch(0.18 0.02 45);
 
-  --destructive: oklch(0.62 0.17 25);
+  --destructive: oklch(0.62 0.16 30);
   --destructive-foreground: oklch(0.96 0.01 85);
 
-  --border: oklch(0.32 0.016 58);
-  --input: oklch(0.32 0.016 58);
-  --ring: oklch(0.68 0.145 40);
+  --border: oklch(0.322 0.014 58);
+  --input: oklch(0.322 0.014 58);
+  --ring: oklch(0.7 0.145 38);
 
-  --fresh: oklch(0.72 0.11 150);
-  --fresh-soft: oklch(0.295 0.028 150);
-  --soon: oklch(0.76 0.115 80);
-  --soon-soft: oklch(0.3 0.034 85);
-  --later: oklch(0.72 0.085 235);
-  --later-soft: oklch(0.285 0.022 235);
-  --late: oklch(0.67 0.155 25);
-  --late-soft: oklch(0.295 0.034 28);
+  --fresh: oklch(0.66 0.105 155);
+  --fresh-soft: oklch(0.3 0.032 155);
+  --soon: oklch(0.72 0.115 85);
+  --soon-soft: oklch(0.305 0.036 85);
+  --later: oklch(0.68 0.014 75);
+  --later-soft: oklch(0.295 0.008 80);
+  --late: oklch(0.64 0.155 30);
+  --late-soft: oklch(0.3 0.038 30);
 
-  --lucy: oklch(0.74 0.125 350);
-  --lucy-soft: oklch(0.295 0.03 350);
-  --manu: oklch(0.72 0.105 235);
-  --manu-soft: oklch(0.285 0.026 235);
-  --rescue: oklch(0.74 0.115 78);
-  --rescue-soft: oklch(0.295 0.034 82);
+  --lucy: oklch(0.72 0.125 350);
+  --lucy-soft: oklch(0.308 0.042 352);
+  --manu: oklch(0.66 0.11 245);
+  --manu-soft: oklch(0.3 0.05 245);
+  --rescue: oklch(0.72 0.115 68);
+  --rescue-soft: oklch(0.303 0.036 72);
 
-  --chart-lucy: oklch(0.66 0.13 350);
-  --chart-manu: oklch(0.49 0.1 235);
+  --chart-lucy: oklch(0.66 0.13 352);
+  --chart-manu: oklch(0.52 0.105 245);
 
   --shadow-soft: 0 1px 2px oklch(0.08 0.01 45 / 0.5), 0 8px 24px -12px oklch(0.06 0.01 45 / 0.6);
   --shadow-lift: 0 2px 4px oklch(0.08 0.01 45 / 0.55), 0 18px 40px -18px oklch(0.06 0.01 45 / 0.7);
   --gradient-paper: radial-gradient(
     120% 90% at 12% 0%,
-    oklch(0.25 0.022 64) 0%,
-    oklch(0.225 0.018 58) 55%,
-    oklch(0.205 0.016 52) 100%
+    oklch(0.232 0.016 62) 0%,
+    oklch(0.214 0.014 58) 60%,
+    oklch(0.202 0.012 54) 100%
   );
 
   color-scheme: dark;
@@ -337,11 +337,13 @@
 }
 
 @utility hero-wash {
+  /* --hero-tint lo fija quien lo usa con el color de la persona activa:
+     el halo del saludo es de quien está mirando, no siempre de Lucy. */
   background:
     radial-gradient(
-      circle at 88% 18%,
-      color-mix(in oklch, var(--lucy-soft) 60%, transparent),
-      transparent 42%
+      circle at 86% 16%,
+      color-mix(in oklch, var(--hero-tint, var(--lucy-soft)) 75%, transparent),
+      transparent 46%
     ),
     var(--card);
 }
