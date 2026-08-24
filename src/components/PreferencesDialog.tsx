@@ -1,8 +1,10 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Switch from "@radix-ui/react-switch";
-import { Bell, Settings2, Volume2, Vibrate, X, ZapOff } from "lucide-react";
+import { Bell, Moon, Settings2, Sun, SunMoon, Volume2, Vibrate, X, ZapOff } from "lucide-react";
 
 import type { Preferences } from "@/hooks/use-preferences";
+import type { ThemePreference } from "@/lib/theme";
+import { cn } from "@/lib/utils";
 
 interface Props {
   preferences: Preferences;
@@ -53,7 +55,28 @@ export function PreferencesDialog({
               <X className="size-4" />
             </Dialog.Close>
           </div>
-          <div className="mt-5 divide-y divide-border/70">
+          <div className="mt-5">
+            <p className="text-sm font-semibold">Aspecto</p>
+            <div className="mt-2 grid grid-cols-3 gap-1 rounded-2xl bg-secondary p-1">
+              {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setPreference("theme", value)}
+                  className={cn(
+                    "flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-2 text-xs font-semibold transition-colors",
+                    preferences.theme === value
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  <Icon className="size-3.5" />
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="mt-3 divide-y divide-border/70">
             <PreferenceRow
               icon={Vibrate}
               title="Vibración suave"
@@ -96,6 +119,12 @@ export function PreferencesDialog({
     </Dialog.Root>
   );
 }
+
+const THEME_OPTIONS: { value: ThemePreference; label: string; icon: typeof Sun }[] = [
+  { value: "system", label: "Sistema", icon: SunMoon },
+  { value: "light", label: "Claro", icon: Sun },
+  { value: "dark", label: "Oscuro", icon: Moon },
+];
 
 function PreferenceRow({
   icon: Icon,

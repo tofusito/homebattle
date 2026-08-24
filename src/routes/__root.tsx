@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { PwaRegister } from "../components/PwaRegister";
 import { Toaster } from "../components/ui/sonner";
+import { THEME_BOOT_SCRIPT } from "../lib/theme";
 
 function NotFoundComponent() {
   return (
@@ -98,6 +99,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:image:height", content: "685" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:image", content: "https://happyhome.tofusito.org/og.png" },
+    ],
+    scripts: [
+      // Aplica el tema guardado antes de pintar para evitar el destello claro.
+      { children: THEME_BOOT_SCRIPT },
     ],
     links: [
       {
