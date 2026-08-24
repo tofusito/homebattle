@@ -1,21 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, ChevronDown, Home, ListChecks, Trophy, UserRound } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Confetti } from "@/components/Confetti";
 import { ActivityBell } from "@/components/ActivityBell";
 import { PersonPicker } from "@/components/PersonPicker";
 import { PreferencesDialog } from "@/components/PreferencesDialog";
-import { ProfileView } from "@/components/ProfileView";
 import { QuickActions } from "@/components/QuickActions";
-import { Scoreboard } from "@/components/Scoreboard";
 import { SyncStatus } from "@/components/SyncStatus";
 import { TaskCard } from "@/components/TaskCard";
 import { TodayHero } from "@/components/TodayHero";
 import { TodayLeagueChip } from "@/components/TodayLeagueChip";
 import { ZoneIcon } from "@/components/ZoneIcon";
-import { ZonesView } from "@/components/ZonesView";
+
+// Las pestañas que no son "Hoy" se cargan al entrar en ellas: recortan el
+// bundle inicial y la primera pintura de la app.
+const ProfileView = lazy(() =>
+  import("@/components/ProfileView").then((m) => ({ default: m.ProfileView })),
+);
+const Scoreboard = lazy(() =>
+  import("@/components/Scoreboard").then((m) => ({ default: m.Scoreboard })),
+);
+const ZonesView = lazy(() =>
+  import("@/components/ZonesView").then((m) => ({ default: m.ZonesView })),
+);
 import {
   AlertDialog,
   AlertDialogAction,
@@ -543,38 +552,44 @@ function Index() {
               </div>
             </section>
           ) : tab === "zonas" ? (
-            <ZonesView
-              states={states}
-              zones={data.zones}
-              people={data.people}
-              currentPerson={person}
-              onDone={handleDone}
-              onSkip={handleSkip}
-            />
+            <Suspense fallback={<TabFallback />}>
+              <ZonesView
+                states={states}
+                zones={data.zones}
+                people={data.people}
+                currentPerson={person}
+                onDone={handleDone}
+                onSkip={handleSkip}
+              />
+            </Suspense>
           ) : tab === "liga" ? (
-            <Scoreboard
-              completions={data.completions}
-              people={data.people}
-              tasks={data.tasks}
-              zones={data.zones}
-              settings={data.settings}
-              rewards={data.rewards}
-              currentPerson={person}
-            />
+            <Suspense fallback={<TabFallback />}>
+              <Scoreboard
+                completions={data.completions}
+                people={data.people}
+                tasks={data.tasks}
+                zones={data.zones}
+                settings={data.settings}
+                rewards={data.rewards}
+                currentPerson={person}
+              />
+            </Suspense>
           ) : (
-            <ProfileView
-              currentPerson={person}
-              people={data.people}
-              rewards={data.rewards}
-              completions={data.completions}
-              tasks={data.tasks}
-              zones={data.zones}
-              section={profileSection}
-              onSectionChange={setProfileSection}
-              onUndo={(id) =>
-                undo.mutate(id, { onSuccess: () => toast("Deshecho. Nunca pasó 🤫") })
-              }
-            />
+            <Suspense fallback={<TabFallback />}>
+              <ProfileView
+                currentPerson={person}
+                people={data.people}
+                rewards={data.rewards}
+                completions={data.completions}
+                tasks={data.tasks}
+                zones={data.zones}
+                section={profileSection}
+                onSectionChange={setProfileSection}
+                onUndo={(id) =>
+                  undo.mutate(id, { onSuccess: () => toast("Deshecho. Nunca pasó 🤫") })
+                }
+              />
+            </Suspense>
           )}
           <SyncStatus
             online={sync.online}
@@ -793,6 +808,16 @@ function Loading() {
   return (
     <div className="mx-auto max-w-2xl space-y-3 px-4 pt-8">
       {[0, 1, 2, 3].map((index) => (
+        <div key={index} className="skeleton-warm h-28 rounded-2xl" />
+      ))}
+    </div>
+  );
+}
+
+function TabFallback() {
+  return (
+    <div className="space-y-3">
+      {[0, 1, 2].map((index) => (
         <div key={index} className="skeleton-warm h-28 rounded-2xl" />
       ))}
     </div>

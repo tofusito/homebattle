@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import {
   addCompletion,
+  invalidateCleaningCache,
   editCompletion,
   readCleaningData,
   redeemReward,
@@ -33,6 +34,7 @@ export const markTaskDone = createServerFn({ method: "POST" })
       completedAt: data.completedAt ?? new Date().toISOString(),
       ...(data.skipped ? { skipped: true } : {}),
     });
+    invalidateCleaningCache();
     publishCleaningChange();
     return { ok: true, ...result };
   });
@@ -47,6 +49,7 @@ export const editTaskCompletion = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const result = await editCompletion(data);
+    invalidateCleaningCache();
     publishCleaningChange();
     return { ok: true, ...result };
   });
@@ -55,6 +58,7 @@ export const redeemRewardVoucher = createServerFn({ method: "POST" })
   .validator(z.object({ id: z.string().min(3).max(100), personId: z.enum(["lucy", "manu"]) }))
   .handler(async ({ data }) => {
     const reward = await redeemReward(data.id, data.personId);
+    invalidateCleaningCache();
     publishCleaningChange();
     return { ok: true, reward };
   });
@@ -63,6 +67,7 @@ export const voteWeeklyPrizeRefresh = createServerFn({ method: "POST" })
   .validator(z.object({ personId: z.enum(["lucy", "manu"]) }))
   .handler(async ({ data }) => {
     const result = await toggleWeeklyPrizeRefresh(data.personId);
+    invalidateCleaningCache();
     publishCleaningChange();
     return { ok: true, ...result };
   });
@@ -96,6 +101,7 @@ export const undoTaskCompletion = createServerFn({ method: "POST" })
   .validator(z.object({ id: z.string().min(1).max(100) }))
   .handler(async ({ data }) => {
     await undoCompletion(data.id);
+    invalidateCleaningCache();
     publishCleaningChange();
     return { ok: true };
   });

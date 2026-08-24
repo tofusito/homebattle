@@ -223,7 +223,20 @@ export function historyWindowStart(now = new Date()): Date {
   return new Date(now.getTime() - HISTORY_WINDOW_DAYS * 24 * 60 * 60 * 1_000);
 }
 
+// Caché en memoria del payload montado. Las mutaciones invalidan; el TTL corto
+// cubre los cambios que no pasan por una mutación (rotación semanal, recordatorios).
+const PAYLOAD_CACHE_TTL_MS = 60_000;
+let payloadCache: { data: CleaningData; expiresAt: number } | undefined;
+let payloadGeneration = 0;
+
+export function invalidateCleaningCache(): void {
+  payloadGeneration += 1;
+  payloadCache = undefined;
+}
+
 export async function readCleaningData(): Promise<CleaningData> {
+  if (payloadCache && payloadCache.expiresAt > Date.now()) return payloadCache.data;
+  const generation = payloadGeneration;
   const db = await readyDatabase();
   const [people, zones, tasks, completions, settings, rewards] = await Promise.all([
     values<Person>(db, "people").find().toArray(),
@@ -270,7 +283,7 @@ export async function readCleaningData(): Promise<CleaningData> {
   if (newlyEarned && !rewardValues.some((reward) => reward.id === newlyEarned.id)) {
     rewardValues.unshift(newlyEarned);
   }
-  return {
+  const payload: CleaningData = {
     people: people.map((row) => row.value).sort((a, b) => a.label.localeCompare(b.label)),
     zones: zones.map((row) => row.value).sort((a, b) => a.sortOrder - b.sortOrder),
     tasks: taskValues,
@@ -291,6 +304,10 @@ export async function readCleaningData(): Promise<CleaningData> {
     settings: currentSettings,
     rewards: rewardValues,
   };
+  if (generation === payloadGeneration) {
+    payloadCache = { data: payload, expiresAt: Date.now() + PAYLOAD_CACHE_TTL_MS };
+  }
+  return payload;
 }
 
 export async function addCompletion(input: {

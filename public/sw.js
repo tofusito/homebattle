@@ -1,4 +1,7 @@
-const CACHE = "happy-home-v5";
+const CACHE = "happy-home-v6";
+// Con red lenta no esperamos al timeout del sistema: pasado este margen se
+// sirve el shell cacheado y la red sigue su curso en segundo plano.
+const NAVIGATION_TIMEOUT_MS = 3500;
 const SHELL = [
   "/",
   "/manifest.webmanifest",
@@ -31,15 +34,30 @@ self.addEventListener("fetch", (event) => {
 
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
+      (async () => {
+        const network = fetch(request).then((response) => {
           if (response.ok) {
             const copy = response.clone();
             caches.open(CACHE).then((cache) => cache.put(request, copy));
           }
           return response;
-        })
-        .catch(async () => (await caches.match(request)) || caches.match("/")),
+        });
+        const timeout = new Promise((resolve) =>
+          setTimeout(() => resolve("timeout"), NAVIGATION_TIMEOUT_MS),
+        );
+        const winner = await Promise.race([network.catch(() => "offline"), timeout]);
+        if (winner !== "timeout" && winner !== "offline") return winner;
+        const cached = (await caches.match(request)) || (await caches.match("/"));
+        if (cached) return cached;
+        // Sin caché (primera visita): no queda otra que esperar a la red.
+        return network.catch(
+          () =>
+            new Response("Sin conexión", {
+              status: 503,
+              headers: { "content-type": "text/plain; charset=utf-8" },
+            }),
+        );
+      })(),
     );
     return;
   }
