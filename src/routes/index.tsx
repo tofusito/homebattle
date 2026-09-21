@@ -26,7 +26,7 @@ import {
   type TaskState,
 } from "@/lib/cleaning";
 import { completionFeedback, completionTimestampForState } from "@/lib/completion-feedback";
-import { APP_NAME, APP_TAGLINE, greetingFor } from "@/lib/copy";
+import { APP_NAME, greetingFor } from "@/lib/copy";
 import { celebrateInteraction } from "@/lib/delight";
 import { cn } from "@/lib/utils";
 
@@ -221,22 +221,28 @@ function Index() {
     <div className={cn("min-h-screen pb-28", preferences.reducedMotion && "reduce-delight")}>
       <Confetti trigger={confetti} />
       <div className="mx-auto w-full max-w-2xl px-4 pt-6 sm:px-6 sm:pt-8">
-        <header className="animate-rise-in flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[0.68rem] font-semibold tracking-[0.2em] text-primary uppercase">
-              {APP_TAGLINE}
-            </p>
-            <h1 className="mt-1.5 text-3xl leading-[1.08] font-semibold text-balance-tight sm:text-4xl">
-              {APP_NAME}
-            </h1>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              {greetingFor(person, current.label)} 👋
-            </p>
+        <header className="animate-rise-in flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <img
+              src="/icons/happy-home-sky-64.png"
+              alt=""
+              width="48"
+              height="48"
+              className="size-12 shrink-0 rounded-2xl shadow-[var(--shadow-soft)]"
+            />
+            <div className="min-w-0">
+              <h1 className="text-[1.42rem] leading-tight font-extrabold text-balance-tight sm:text-3xl">
+                {APP_NAME}
+              </h1>
+              <p className="truncate text-xs text-muted-foreground sm:text-sm">
+                {greetingFor(person, current.label)} 👋
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <span
               className={cn(
-                "card-soft rounded-full px-3 py-2 text-xs font-semibold",
+                "card-soft hidden rounded-full px-3 py-2 text-xs font-semibold sm:inline-flex",
                 person === "lucy" ? "text-lucy" : "text-manu",
               )}
             >

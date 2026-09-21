@@ -84,7 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         name: "description",
         content: "Labores de casa gamificadas para Lucy y Manu.",
       },
-      { name: "theme-color", content: "#f7f5f9" },
+      { name: "theme-color", content: "#f7fbfd" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "Happy Home" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
@@ -109,14 +109,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "manifest", href: "/manifest.webmanifest?v=4" },
+      { rel: "manifest", href: "/manifest.webmanifest?v=5" },
       {
         rel: "icon",
         type: "image/png",
         sizes: "64x64",
-        href: "/favicon-home-sparkle.png?v=4",
+        href: "/icons/happy-home-sky-64.png?v=5",
       },
-      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png?v=4" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/icons/happy-home-sky-180.png?v=5" },
     ],
   }),
   shellComponent: RootShell,
@@ -127,7 +127,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>

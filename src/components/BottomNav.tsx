@@ -14,7 +14,7 @@ const TABS = [
 export function BottomNav({ tab, onChange }: { tab: Tab; onChange: (tab: Tab) => void }) {
   return (
     <nav className="safe-nav fixed inset-x-0 bottom-0 z-40 px-4 pt-2">
-      <div className="card-soft mx-auto flex max-w-md items-center justify-between gap-1 rounded-full p-1.5 backdrop-blur-sm">
+      <div className="mx-auto flex max-w-md items-center justify-between gap-1 rounded-full border border-border bg-card/95 p-1.5 shadow-[var(--shadow-lift)] backdrop-blur-xl">
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -23,7 +23,7 @@ export function BottomNav({ tab, onChange }: { tab: Tab; onChange: (tab: Tab) =>
             className={cn(
               "relative flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-2 py-2 text-xs font-semibold transition-all duration-200",
               tab === id
-                ? "bg-primary text-primary-foreground shadow-sm"
+                ? "bg-primary/10 text-primary ring-1 ring-inset ring-primary/20"
                 : "text-muted-foreground hover:bg-secondary",
             )}
           >

@@ -42,7 +42,7 @@ export function useGentleReminders(
         if (window.localStorage.getItem(key)) continue;
         new Notification("Happy Home", {
           body: `${state.task.name} te está esperando con cariño.`,
-          icon: "/icons/icon-home-sparkle-192.png",
+          icon: "/icons/happy-home-sky-192.png",
           tag: key,
         });
         window.localStorage.setItem(key, "sent");

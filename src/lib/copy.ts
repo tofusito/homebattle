@@ -1,7 +1,6 @@
 import type { PersonId, Status } from "./cleaning";
 
 export const APP_NAME = "Happy Home";
-export const APP_TAGLINE = "La casa no se coordina sola";
 
 export const CELEBRATIONS = [
   "¡BOOM! Tarea fulminada 💥",
