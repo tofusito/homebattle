@@ -130,7 +130,7 @@ export const TASKS: Task[] = [
     points: 1,
     maxScoredCompletionsPerPeriod: 3,
     archived: true,
-    retiredAt: "2026-09-21",
+    retiredAt: "2026-09-22",
   },
   {
     id: "cocina_lavavajillas",

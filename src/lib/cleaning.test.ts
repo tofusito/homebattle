@@ -149,9 +149,9 @@ describe("household rotations", () => {
       id: "old-dishwasher",
       taskId: "cocina_poner_lavavajillas",
       personId: "manu",
-      completedAt: "2026-09-20T10:00:00+02:00",
+      completedAt: "2026-09-21T10:00:00+02:00",
     };
-    expect(leagueScores([oldCompletion], TASKS, new Date("2026-09-20T00:00:00+02:00")).manu).toBe(
+    expect(leagueScores([oldCompletion], TASKS, new Date("2026-09-21T00:00:00+02:00")).manu).toBe(
       1,
     );
   });
