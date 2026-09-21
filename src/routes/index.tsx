@@ -10,7 +10,13 @@ import { PreferencesDialog } from "@/components/PreferencesDialog";
 import { RescueDialog } from "@/components/RescueDialog";
 import { SyncStatus } from "@/components/SyncStatus";
 import { TodayView } from "@/components/TodayView";
-import { useCleaningData, useLiveSync, useMarkDone, useUndo } from "@/hooks/use-cleaning-data";
+import {
+  useCleaningData,
+  useLiveSync,
+  useMarkDone,
+  useMealSwapVote,
+  useUndo,
+} from "@/hooks/use-cleaning-data";
 import { useGentleReminders } from "@/hooks/use-reminders";
 import { usePerson } from "@/hooks/use-person";
 import { usePreferences } from "@/hooks/use-preferences";
@@ -20,6 +26,7 @@ import {
   buildGraceTaskStates,
   buildTaskStates,
   isTaskStateSatisfied,
+  localDateKey,
   personById,
   requiresRescueConfirmation,
   taskStateKey,
@@ -70,6 +77,7 @@ function Index() {
       weeklyRewardWeekKey: "",
     },
     rewards: [],
+    mealSwaps: [],
   };
   const { person, ready, choose, forget } = usePerson(data.people);
   const { preferences, setPreference } = usePreferences();
@@ -90,13 +98,14 @@ function Index() {
   const [pendingRescueStateKey, setPendingRescueStateKey] = useState<string | null>(null);
   const markDone = useMarkDone();
   const undo = useUndo();
+  const mealSwapVote = useMealSwapVote();
   const states = useMemo(
-    () => buildTaskStates(data.tasks, data.completions),
-    [data.tasks, data.completions],
+    () => buildTaskStates(data.tasks, data.completions, data.mealSwaps ?? []),
+    [data.tasks, data.completions, data.mealSwaps],
   );
   const graceStates = useMemo(
-    () => buildGraceTaskStates(data.tasks, data.completions),
-    [data.tasks, data.completions],
+    () => buildGraceTaskStates(data.tasks, data.completions, new Date(), data.mealSwaps ?? []),
+    [data.tasks, data.completions, data.mealSwaps],
   );
   const actionableStates = [...graceStates, ...states];
   useGentleReminders(states, person, preferences);
@@ -276,6 +285,14 @@ function Index() {
               current={current}
               onDone={handleDone}
               onSkip={handleSkip}
+              mealSwap={data.mealSwaps?.find((swap) => swap.dateKey === localDateKey())}
+              onMealSwapVote={() =>
+                mealSwapVote.mutate(person, {
+                  onError: (error) => toast.error(error.message),
+                  onSuccess: () => toast.success("Turnos actualizados"),
+                })
+              }
+              mealSwapBusy={mealSwapVote.isPending}
               onOpenLiga={() => changeTab("liga")}
               onOpenZonas={() => changeTab("zonas")}
             />
@@ -309,6 +326,7 @@ function Index() {
                 people={data.people}
                 rewards={data.rewards}
                 completions={data.completions}
+                mealSwaps={data.mealSwaps ?? []}
                 tasks={data.tasks}
                 zones={data.zones}
                 section={profileSection}

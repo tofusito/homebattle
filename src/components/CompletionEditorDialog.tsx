@@ -9,6 +9,7 @@ import {
   madridTimeKey,
   personById,
   type Completion,
+  type MealSwap,
   type Person,
   type PersonId,
   type Task,
@@ -25,6 +26,7 @@ interface CompletionEdit {
 export function CompletionEditorDialog({
   completion,
   completions,
+  mealSwaps,
   tasks,
   people,
   open,
@@ -34,6 +36,7 @@ export function CompletionEditorDialog({
 }: {
   completion: Completion | null;
   completions: Completion[];
+  mealSwaps: MealSwap[];
   tasks: Task[];
   people: Person[];
   open: boolean;
@@ -69,6 +72,7 @@ export function CompletionEditorDialog({
           tasks,
           new Date(completedAt),
           completions.filter((row) => row.id !== completion?.id && !row.undoneAt),
+          mealSwaps,
         )
       : null;
   const future = Boolean(completedAt && new Date(completedAt).getTime() > Date.now() + 60_000);

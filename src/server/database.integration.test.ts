@@ -107,6 +107,20 @@ suite("database.server (integración)", () => {
     ).rejects.toThrow("Only lunch and dinner can be skipped");
   });
 
+  test("meal swap requires both people and keeps the normal rotation tomorrow", async () => {
+    const first = await db.voteMealSwap("manu");
+    expect(first?.requestedBy).toBe("manu");
+    expect(first?.acceptedBy).toBeUndefined();
+    expect(await db.voteMealSwap("manu")).toBeNull();
+    expect((await db.voteMealSwap("manu"))?.requestedBy).toBe("manu");
+    const second = await db.voteMealSwap("lucy");
+    expect(second?.acceptedBy).toBe("lucy");
+    const data = await db.readCleaningData();
+    expect(data.mealSwaps.find((swap) => swap.dateKey === second?.dateKey)?.acceptedBy).toBe(
+      "lucy",
+    );
+  });
+
   test("editCompletion rechaza fechas futuras", async () => {
     const id = crypto.randomUUID();
     const task = (await db.readCleaningData()).tasks.find(

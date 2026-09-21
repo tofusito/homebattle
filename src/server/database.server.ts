@@ -7,6 +7,7 @@ import {
   type CleaningData,
   type Completion,
   type HouseholdSettings,
+  type MealSwap,
   type Person,
   type PersonId,
   type RewardVoucher,
@@ -52,6 +53,24 @@ interface StoredReward extends Document {
   redeemedAt?: Date;
   consumedAt?: Date;
   consumedCompletionId?: string;
+}
+
+interface StoredMealSwap extends Document {
+  _id: string;
+  requestedBy: PersonId;
+  requestedAt: Date;
+  acceptedBy?: PersonId;
+  acceptedAt?: Date;
+}
+
+function mealSwapFromStored(row: StoredMealSwap): MealSwap {
+  return {
+    dateKey: row._id,
+    requestedBy: row.requestedBy,
+    requestedAt: row.requestedAt.toISOString(),
+    ...(row.acceptedBy ? { acceptedBy: row.acceptedBy } : {}),
+    ...(row.acceptedAt ? { acceptedAt: row.acceptedAt.toISOString() } : {}),
+  };
 }
 
 export interface StoredPushSubscription extends Document {
@@ -238,7 +257,7 @@ export async function readCleaningData(): Promise<CleaningData> {
   if (payloadCache && payloadCache.expiresAt > Date.now()) return payloadCache.data;
   const generation = payloadGeneration;
   const db = await readyDatabase();
-  const [people, zones, tasks, completions, settings, rewards] = await Promise.all([
+  const [people, zones, tasks, completions, settings, rewards, mealSwaps] = await Promise.all([
     values<Person>(db, "people").find().toArray(),
     values<Zone>(db, "zones").find().toArray(),
     values<Task>(db, "tasks").find().toArray(),
@@ -250,6 +269,10 @@ export async function readCleaningData(): Promise<CleaningData> {
       .toArray(),
     values<HouseholdSettings>(db, "settings").findOne({ _id: "household" }),
     db.collection<StoredReward>("rewards").find().sort({ earnedAt: -1 }).limit(500).toArray(),
+    db
+      .collection<StoredMealSwap>("mealSwaps")
+      .find({ _id: { $gte: localDateKey(historyWindowStart()) } })
+      .toArray(),
   ]);
   let currentSettings = normalizedSettings(settings?.value);
   if (!settings) {
@@ -303,11 +326,52 @@ export async function readCleaningData(): Promise<CleaningData> {
     })),
     settings: currentSettings,
     rewards: rewardValues,
+    mealSwaps: mealSwaps.map(mealSwapFromStored),
   };
   if (generation === payloadGeneration) {
     payloadCache = { data: payload, expiresAt: Date.now() + PAYLOAD_CACHE_TTL_MS };
   }
   return payload;
+}
+
+export async function voteMealSwap(personId: PersonId): Promise<MealSwap | null> {
+  const db = await readyDatabase();
+  const dateKey = localDateKey();
+  const collection = db.collection<StoredMealSwap>("mealSwaps");
+  const existing = await collection.findOne({ _id: dateKey });
+  if (existing?.acceptedBy) return mealSwapFromStored(existing);
+  const recentMeals = await db
+    .collection<StoredCompletion>("completions")
+    .find({
+      taskId: { $in: ["cocina_comida", "cocina_cena"] },
+      completedAt: { $gte: new Date(Date.now() - 48 * 60 * 60 * 1_000) },
+      undoneAt: { $exists: false },
+    })
+    .toArray();
+  if (recentMeals.some((meal) => localDateKey(meal.completedAt) === dateKey)) {
+    throw new Error("Los turnos de comida y cena ya han empezado hoy");
+  }
+  if (!existing) {
+    try {
+      await collection.insertOne({ _id: dateKey, requestedBy: personId, requestedAt: new Date() });
+    } catch (error) {
+      if (!(error instanceof Error) || !error.message.includes("E11000")) throw error;
+    }
+  } else if (existing.requestedBy === personId) {
+    await collection.deleteOne({
+      _id: dateKey,
+      requestedBy: personId,
+      acceptedBy: { $exists: false },
+    });
+  } else {
+    await collection.updateOne(
+      { _id: dateKey, requestedBy: existing.requestedBy, acceptedBy: { $exists: false } },
+      { $set: { acceptedBy: personId, acceptedAt: new Date() } },
+    );
+  }
+  invalidateCleaningCache();
+  const current = await collection.findOne({ _id: dateKey });
+  return current ? mealSwapFromStored(current) : null;
 }
 
 export async function addCompletion(input: {
@@ -323,8 +387,11 @@ export async function addCompletion(input: {
     values<Person>(db, "people").findOne({ _id: input.personId }),
     values<Task>(db, "tasks").find().toArray(),
   ]);
-  if (!task || !person) throw new Error("Unknown task or person");
+  if (!task || !person || task.value.archived) throw new Error("Unknown or retired task or person");
   const completedAt = new Date(input.completedAt);
+  const mealSwap = await db
+    .collection<StoredMealSwap>("mealSwaps")
+    .findOne({ _id: localDateKey(completedAt) });
   const linkedSourceRows =
     task.value.schedule.type === "linked"
       ? await db
@@ -351,6 +418,7 @@ export async function addCompletion(input: {
     taskRows.map((row) => row.value),
     completedAt,
     linkedCompletions,
+    mealSwap ? [mealSwapFromStored(mealSwap)] : [],
   );
   if (input.skipped && task.value.id !== "cocina_comida" && task.value.id !== "cocina_cena") {
     throw new Error("Only lunch and dinner can be skipped");
@@ -474,7 +542,16 @@ export async function editCompletion(input: {
     completedAt: row.completedAt.toISOString(),
   }));
   const tasks = taskRows.map((row) => row.value);
-  const assignedPersonId = assignedPersonForTask(task, tasks, completedAt, linkedCompletions);
+  const mealSwap = await db
+    .collection<StoredMealSwap>("mealSwaps")
+    .findOne({ _id: localDateKey(completedAt) });
+  const assignedPersonId = assignedPersonForTask(
+    task,
+    tasks,
+    completedAt,
+    linkedCompletions,
+    mealSwap ? [mealSwapFromStored(mealSwap)] : [],
+  );
   if (stored.skipped && assignedPersonId !== input.personId) {
     throw new Error("Only the assigned person can own a skipped meal");
   }

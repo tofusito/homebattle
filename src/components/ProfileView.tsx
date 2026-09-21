@@ -11,6 +11,7 @@ import {
   rescueStats,
   startOfWeek,
   type Completion,
+  type MealSwap,
   type Person,
   type PersonId,
   type RewardVoucher,
@@ -26,6 +27,7 @@ export function ProfileView({
   people,
   rewards,
   completions,
+  mealSwaps,
   tasks,
   zones,
   onUndo,
@@ -36,6 +38,7 @@ export function ProfileView({
   people: Person[];
   rewards: RewardVoucher[];
   completions: Completion[];
+  mealSwaps: MealSwap[];
   tasks: Task[];
   zones: Zone[];
   onUndo: (id: string) => void;
@@ -180,6 +183,7 @@ export function ProfileView({
       ) : (
         <HistoryList
           completions={completions}
+          mealSwaps={mealSwaps}
           tasks={tasks}
           zones={zones}
           people={people}

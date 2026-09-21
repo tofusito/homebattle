@@ -4,6 +4,7 @@ import {
   buildTaskStates,
   localDateKey,
   type Completion,
+  type MealSwap,
   type PersonId,
   type Task,
 } from "@/lib/cleaning";
@@ -31,7 +32,7 @@ async function sendDueReminders(): Promise<void> {
   const period = currentPeriod();
   if (!period) return;
   const db = await reminderDatabase();
-  const [taskRows, completionRows, subscriptions] = await Promise.all([
+  const [taskRows, completionRows, subscriptions, mealSwap] = await Promise.all([
     db.collection<{ _id: string; value: Task }>("tasks").find().toArray(),
     db
       .collection<{
@@ -48,6 +49,15 @@ async function sendDueReminders(): Promise<void> {
       .limit(1_000)
       .toArray(),
     db.collection<StoredPushSubscription>("pushSubscriptions").find().toArray(),
+    db
+      .collection<{
+        _id: string;
+        requestedBy: PersonId;
+        requestedAt: Date;
+        acceptedBy?: PersonId;
+        acceptedAt?: Date;
+      }>("mealSwaps")
+      .findOne({ _id: localDateKey() }),
   ]);
   const tasks = taskRows.map((row) => row.value);
   const completions: Completion[] = completionRows.map((row) => ({
@@ -59,7 +69,18 @@ async function sendDueReminders(): Promise<void> {
     ...(row.skipped ? { skipped: true } : {}),
     ...(row.undoneAt ? { undoneAt: row.undoneAt.toISOString() } : {}),
   }));
-  const states = buildTaskStates(tasks, completions);
+  const swaps: MealSwap[] = mealSwap
+    ? [
+        {
+          dateKey: mealSwap._id,
+          requestedBy: mealSwap.requestedBy,
+          requestedAt: mealSwap.requestedAt.toISOString(),
+          ...(mealSwap.acceptedBy ? { acceptedBy: mealSwap.acceptedBy } : {}),
+          ...(mealSwap.acceptedAt ? { acceptedAt: mealSwap.acceptedAt.toISOString() } : {}),
+        },
+      ]
+    : [];
+  const states = buildTaskStates(tasks, completions, swaps);
   const dateKey = localDateKey();
 
   for (const subscription of subscriptions) {

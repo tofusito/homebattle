@@ -23,6 +23,7 @@ import {
   redeemRewardVoucher,
   undoTaskCompletion,
   voteWeeklyPrizeRefresh,
+  voteDailyMealSwap,
 } from "@/server/cleaning.functions";
 
 const QUERY_KEY = ["cleaning-data"] as const;
@@ -56,6 +57,7 @@ function cachedData(): CleaningData | undefined {
         weeklyRewardWeekKey: "",
       },
       rewards: parsed.rewards ?? [],
+      mealSwaps: parsed.mealSwaps ?? [],
     };
   } catch {
     return undefined;
@@ -83,6 +85,14 @@ export function useCleaningData() {
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
+  });
+}
+
+export function useMealSwapVote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (personId: PersonId) => voteDailyMealSwap({ data: { personId } }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
   });
 }
 

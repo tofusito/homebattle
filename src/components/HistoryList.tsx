@@ -9,6 +9,7 @@ import {
   personById,
   startOfWeek,
   type Completion,
+  type MealSwap,
   type Person,
   type Task,
   type Zone,
@@ -22,12 +23,14 @@ type KindFilter = "all" | "lucy" | "manu" | "rescues";
 
 export function HistoryList({
   completions,
+  mealSwaps,
   tasks,
   zones,
   people,
   onUndo,
 }: {
   completions: Completion[];
+  mealSwaps: MealSwap[];
   tasks: Task[];
   zones: Zone[];
   people: Person[];
@@ -180,6 +183,7 @@ export function HistoryList({
       <CompletionEditorDialog
         completion={editing}
         completions={completions}
+        mealSwaps={mealSwaps}
         tasks={tasks}
         people={people}
         open={Boolean(editing)}

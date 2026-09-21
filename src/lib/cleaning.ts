@@ -47,6 +47,7 @@ export interface Task {
   maxScoredCompletionsPerPeriod?: number;
   unlimitedScoring?: boolean;
   archived?: boolean;
+  retiredAt?: string;
 }
 
 export interface Completion {
@@ -71,6 +72,15 @@ export interface CleaningData {
   completions: Completion[];
   settings: HouseholdSettings;
   rewards: RewardVoucher[];
+  mealSwaps: MealSwap[];
+}
+
+export interface MealSwap {
+  dateKey: string;
+  requestedBy: PersonId;
+  requestedAt: string;
+  acceptedBy?: PersonId;
+  acceptedAt?: string;
 }
 
 export interface HouseholdSettings {
@@ -327,12 +337,20 @@ export function assignedPersonForTask(
   tasks: Task[],
   date = new Date(),
   completions: Completion[] = [],
+  mealSwaps: MealSwap[] = [],
 ): PersonId | null {
   if (task.schedule.type === "linked") {
     const sourceCompletion = latestLinkedSourceCompletion(task, completions, date);
     return sourceCompletion ? opposite(sourceCompletion.personId) : null;
   }
-  return assigneeFor(task.schedule, localDateKey(date), tasks);
+  const assignee = assigneeFor(task.schedule, localDateKey(date), tasks);
+  if (
+    (task.id === "cocina_comida" || task.id === "cocina_cena") &&
+    mealSwaps.some((swap) => swap.dateKey === localDateKey(date) && swap.acceptedBy)
+  ) {
+    return assignee ? opposite(assignee) : null;
+  }
+  return assignee;
 }
 
 function rotationLabel(
@@ -357,7 +375,11 @@ function rotationLabel(
   return `El próximo mes: ${next === "lucy" ? "Lucy" : "Manu"} · ${friendlyDate(firstSunday(nextMonth))}`;
 }
 
-export function buildTaskStates(tasks: Task[], completions: Completion[]): TaskState[] {
+export function buildTaskStates(
+  tasks: Task[],
+  completions: Completion[],
+  mealSwaps: MealSwap[] = [],
+): TaskState[] {
   const valid = completions.filter((completion) => !completion.undoneAt);
   const lastByTask = new Map<string, Completion>();
   for (const completion of valid) {
@@ -388,8 +410,16 @@ export function buildTaskStates(tasks: Task[], completions: Completion[]): TaskS
     .filter((task) => !task.archived)
     .map((task): TaskState => {
       const last = lastByTask.get(task.id) ?? null;
-      const assignedTo = assignedPersonForTask(task, tasks, new Date(), valid);
-      const nextRotation = rotationLabel(task.schedule, today, assignedTo);
+      const assignedTo = assignedPersonForTask(task, tasks, new Date(), valid, mealSwaps);
+      const swappedMeal =
+        (task.id === "cocina_comida" || task.id === "cocina_cena") &&
+        mealSwaps.some((swap) => swap.dateKey === today && swap.acceptedBy);
+      const tomorrowAssignee = swappedMeal
+        ? assigneeFor(task.schedule, addDaysKey(today, 1), tasks)
+        : null;
+      const nextRotation = tomorrowAssignee
+        ? `Mañana pasa a ${tomorrowAssignee === "lucy" ? "Lucy" : "Manu"}`
+        : rotationLabel(task.schedule, today, assignedTo);
       if (task.schedule.type === "on_demand") {
         const completedToday = completionCountTodayByTask.get(task.id) ?? 0;
         const dailyLimit = task.maxScoredCompletionsPerPeriod ?? 1;
@@ -563,6 +593,7 @@ export function buildGraceTaskStates(
   tasks: Task[],
   completions: Completion[],
   date = new Date(),
+  mealSwaps: MealSwap[] = [],
 ): TaskState[] {
   const today = localDateKey(date);
   const yesterday = addDaysKey(today, -1);
@@ -604,6 +635,7 @@ export function buildGraceTaskStates(
         tasks,
         new Date(`${yesterday}T12:00:00+02:00`),
         valid,
+        mealSwaps,
       ),
       status: "late",
       progress: 1,
@@ -848,7 +880,12 @@ function scoringRows(
 
   for (const completion of rows) {
     const task = tasksById.get(completion.taskId);
-    if (!task || task.archived || task.points <= 0) continue;
+    if (!task || task.points <= 0) continue;
+    if (
+      task.archived &&
+      (!task.retiredAt || localDateKey(new Date(completion.completedAt)) >= task.retiredAt)
+    )
+      continue;
     const occurrence = `${task.id}:${leagueBucket(task, completion)}`;
     const count = occurrenceCounts.get(occurrence) ?? 0;
     const scoringLimit = task.unlimitedScoring

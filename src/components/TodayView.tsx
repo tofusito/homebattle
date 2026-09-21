@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronDown } from "lucide-react";
+import { ArrowLeftRight, ArrowRight, ChevronDown } from "lucide-react";
 
 import { QuickActions } from "@/components/QuickActions";
 import { TaskCard } from "@/components/TaskCard";
@@ -11,11 +11,13 @@ import {
   isRescueCompletion,
   isTodayTask,
   isWeeklyOverviewTask,
+  localDateKey,
   personById,
   taskStateKey,
   type Completion,
   type Person,
   type PersonId,
+  type MealSwap,
   type Task as TaskModel,
   type TaskState,
   type Zone,
@@ -32,6 +34,9 @@ export function TodayView({
   current,
   onDone,
   onSkip,
+  mealSwap,
+  onMealSwapVote,
+  mealSwapBusy,
   onOpenLiga,
   onOpenZonas,
 }: {
@@ -45,6 +50,9 @@ export function TodayView({
   current: Person;
   onDone: (id: string, occurrenceDate?: string) => void;
   onSkip: (id: string, occurrenceDate?: string) => void;
+  mealSwap: MealSwap | undefined;
+  onMealSwapVote: () => void;
+  mealSwapBusy: boolean;
   onOpenLiga: () => void;
   onOpenZonas: () => void;
 }) {
@@ -53,6 +61,12 @@ export function TodayView({
   const todayTasks = states.filter(isTodayTask);
   const todayPending = todayTasks.filter((state) => state.status !== "fresh");
   const todayDone = todayTasks.filter((state) => state.status === "fresh");
+  const mealTurnStarted = completions.some(
+    (completion) =>
+      !completion.undoneAt &&
+      (completion.taskId === "cocina_comida" || completion.taskId === "cocina_cena") &&
+      localDateKey(new Date(completion.completedAt)) === localDateKey(),
+  );
   const orderedGraceStates = [...graceStates].sort(
     (a, b) => Number(b.assignedTo === person) - Number(a.assignedTo === person),
   );
@@ -93,6 +107,40 @@ export function TodayView({
         person={current}
         onOpen={onOpenLiga}
       />
+
+      <div className="card-soft rounded-3xl px-4 py-4 sm:px-5">
+        <div className="flex items-start gap-3">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <ArrowLeftRight className="size-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold">¿Cambiamos comida y cena?</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              {mealSwap?.acceptedBy
+                ? "Intercambio acordado para hoy. Mañana vuelve la rotación normal."
+                : mealTurnStarted
+                  ? "Los turnos de hoy ya han empezado; no se pueden intercambiar después."
+                  : mealSwap
+                    ? `Propuesto por ${personById(people, mealSwap.requestedBy).label}. Falta el visto bueno de ${personById(people, mealSwap.requestedBy === "lucy" ? "manu" : "lucy").label}.`
+                    : "Uno lo propone y el otro lo acepta. Cambian los dos turnos solo por hoy."}
+            </p>
+          </div>
+        </div>
+        {!mealSwap?.acceptedBy && !mealTurnStarted ? (
+          <button
+            type="button"
+            onClick={onMealSwapVote}
+            disabled={mealSwapBusy || (typeof navigator !== "undefined" && !navigator.onLine)}
+            className="mt-3 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-xs font-bold text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
+          >
+            {mealSwap?.requestedBy === person
+              ? "Cancelar propuesta"
+              : mealSwap
+                ? "Aceptar intercambio"
+                : "Proponer intercambio"}
+          </button>
+        ) : null}
+      </div>
 
       {orderedGraceStates.length > 0 ? (
         <div>
@@ -317,7 +365,7 @@ export function TodayView({
 function preferredQuickActions(states: TaskState[]): TaskState[] {
   const quickActionIds = [
     "cocina_desayuno",
-    "cocina_poner_lavavajillas",
+    "gatos_llenar_agua",
     "cocina_lavavajillas",
     "habitacion_hacer_cama",
   ];

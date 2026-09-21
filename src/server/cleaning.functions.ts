@@ -11,6 +11,7 @@ import {
   savePushSubscription,
   toggleWeeklyPrizeRefresh,
   undoCompletion,
+  voteMealSwap,
 } from "@/server/database.server";
 import { publishCleaningChange } from "@/server/events.server";
 
@@ -70,6 +71,15 @@ export const voteWeeklyPrizeRefresh = createServerFn({ method: "POST" })
     invalidateCleaningCache();
     publishCleaningChange();
     return { ok: true, ...result };
+  });
+
+export const voteDailyMealSwap = createServerFn({ method: "POST" })
+  .validator(z.object({ personId: z.enum(["lucy", "manu"]) }))
+  .handler(async ({ data }) => {
+    const mealSwap = await voteMealSwap(data.personId);
+    invalidateCleaningCache();
+    publishCleaningChange();
+    return { ok: true, mealSwap };
   });
 
 export const getPushConfig = createServerFn({ method: "GET" }).handler(() => ({

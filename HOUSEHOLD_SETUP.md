@@ -36,7 +36,6 @@ The app keeps a simple two-person selector in browser `localStorage`. Cloudflare
 |   4 | `cocina_recoger_cena`             | Cocina     | Recoger y limpiar tras la cena        | Linked to dinner; starts 2026-08-10 | Appears after dinner is marked; assigned opposite the actual cook; surfaces are included |             1 |
 |   5 | `cocina_suelo`                    | Cocina     | Fregar el suelo de la cocina          | On demand; minimum weekly           | One person per week, alternating; Lucy starts the week of 2026-08-03; marked separately  |             1 |
 |   6 | `cocina_desayuno`                 | Cocina     | Preparar el desayuno                  | On demand                           | Whoever marks it; scores once per day                                                    |             1 |
-|   7 | `cocina_poner_lavavajillas`       | Cocina     | Poner el lavavajillas                 | On demand                           | Whoever marks it; scores up to three times per day                                       |             1 |
 |   8 | `cocina_lavavajillas`             | Cocina     | Recoger el lavavajillas               | On demand                           | Whoever marks it; scores up to three times per day                                       |             1 |
 |   9 | `gatos_arenero`                   | Gatos      | Limpiar el arenero                    | Daily; preferably in the evening    | Lucy on 2026-08-07; Manu next; alternate every day                                       |             1 |
 |  10 | `gatos_llenar_agua`               | Gatos      | Llenar de agua el bebedero            | On demand                           | Whoever marks it                                                                         |             1 |
@@ -56,7 +55,7 @@ The app keeps a simple two-person selector in browser `localStorage`. Cloudflare
 |  24 | `general_robot_deposito`          | General    | Rellenar y limpiar depósito del robot | On demand                           | Whoever marks it; scores once per day                                                    |             1 |
 |  25 | `general_robot_limpieza_profunda` | General    | Limpiar robot y base en profundidad   | On demand                           | Whoever marks it; scores once per day                                                    |             1 |
 
-`cocina_superficies` remains archived with zero points. The former separate towel and pillowcase tasks are also archived so their two 2026-08-09 history entries remain auditable; from 2026-08-16 onward only the combined one-point task is active.
+`cocina_poner_lavavajillas` is retired from 2026-09-21; old completions remain in the history and retain their earlier points. `cocina_superficies` remains archived with zero points. The former separate towel and pillowcase tasks are also archived so their two 2026-08-09 history entries remain auditable; from 2026-08-16 onward only the combined one-point task is active.
 
 ## Scheduling behavior
 
@@ -73,10 +72,11 @@ The app keeps a simple two-person selector in browser `localStorage`. Cloudflare
 - Both tasks are due every day.
 - Within a cycle, one profile is responsible for lunch and the other for dinner.
 - Assignments swap every calendar day.
+- Either person can propose a one-day lunch/dinner exchange in Today. The other person must approve it before both assignments switch; tomorrow's normal rotation is unchanged. An exchange cannot be accepted after either meal has been completed or skipped.
 - Rotation anchor: on 2026-08-08, Manu is responsible for lunch and Lucy for dinner. On 2026-08-09, Lucy is responsible for lunch and Manu for dinner.
 - From 2026-08-10, completing lunch or dinner activates one matching kitchen-cleanup handoff assigned to the other person. It is not actionable before the cooking task is marked.
 - Lunch and dinner alone have a small skip action. A skipped meal resolves that occurrence with no league points and never activates its linked kitchen-cleanup handoff; it remains undoable in history.
-- Kitchen cleanup includes counters, surfaces, putting stray items away, and a reasonable general tidy. Loading and unloading the dishwasher remain separate actions.
+- Kitchen cleanup includes counters, surfaces, putting stray items away, and a reasonable general tidy. Unloading the dishwasher remains a separate action; loading is no longer a task.
 - The kitchen-floor task is on demand, with a minimum of one completion per week. One person owns each week and the assignment alternates; it remains separate from dinner.
 - The Today tab shows daily work and kitchen handoffs in the responsible person's list; laundry handoffs remain shared in `Ropa lista`. On-demand tasks have their own section underneath and remain visible in Zones.
 - Task cards no longer show an unexplained percentage/progress bar; the status text and assigned person are the source of truth.

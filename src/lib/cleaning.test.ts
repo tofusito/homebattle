@@ -63,7 +63,6 @@ describe("household rotations", () => {
   test("includes the new quick household tasks as on-demand work", () => {
     const taskIds = [
       "cocina_desayuno",
-      "cocina_poner_lavavajillas",
       "cocina_lavavajillas",
       "gatos_llenar_agua",
       "gatos_llenar_comida",
@@ -109,9 +108,9 @@ describe("household rotations", () => {
     expect(scoreReceiptForCompletion(repeated, [first, repeated], TASKS).reason).toBe("repeated");
   });
 
-  test("keeps both dishwasher shortcuts available until their third daily completion", () => {
+  test("keeps unloading the dishwasher available until its third daily completion", () => {
     setSystemTime(new Date("2026-08-15T18:00:00+02:00"));
-    const taskIds = ["cocina_poner_lavavajillas", "cocina_lavavajillas"];
+    const taskIds = ["cocina_lavavajillas"];
     const completions: Completion[] = taskIds.flatMap((taskId) =>
       [9, 13, 17].map((hour, index) => ({
         id: `${taskId}-${index + 1}`,
@@ -140,6 +139,48 @@ describe("household rotations", () => {
         dueLabel: "3/3 hechas hoy",
       });
     }
+  });
+
+  test("retires loading the dishwasher without erasing its old points", () => {
+    expect(
+      buildTaskStates(TASKS, []).some((state) => state.task.id === "cocina_poner_lavavajillas"),
+    ).toBe(false);
+    const oldCompletion: Completion = {
+      id: "old-dishwasher",
+      taskId: "cocina_poner_lavavajillas",
+      personId: "manu",
+      completedAt: "2026-09-20T10:00:00+02:00",
+    };
+    expect(leagueScores([oldCompletion], TASKS, new Date("2026-09-20T00:00:00+02:00")).manu).toBe(
+      1,
+    );
+  });
+
+  test("swaps only today's meal assignments after the second approval", () => {
+    setSystemTime(new Date("2026-08-15T08:00:00+02:00"));
+    const pending = [
+      { dateKey: "2026-08-15", requestedBy: "manu" as const, requestedAt: "2026-08-15T06:00:00Z" },
+    ];
+    const accepted = [
+      { ...pending[0]!, acceptedBy: "lucy" as const, acceptedAt: "2026-08-15T06:10:00Z" },
+    ];
+    const normal = buildTaskStates(TASKS, []);
+    const awaiting = buildTaskStates(TASKS, [], pending);
+    const swapped = buildTaskStates(TASKS, [], accepted);
+    const lunch = "cocina_comida";
+    const dinner = "cocina_cena";
+    expect(awaiting.find((state) => state.task.id === lunch)?.assignedTo).toBe(
+      normal.find((state) => state.task.id === lunch)?.assignedTo,
+    );
+    expect(swapped.find((state) => state.task.id === lunch)?.assignedTo).toBe(
+      normal.find((state) => state.task.id === dinner)?.assignedTo,
+    );
+    expect(swapped.find((state) => state.task.id === dinner)?.assignedTo).toBe(
+      normal.find((state) => state.task.id === lunch)?.assignedTo,
+    );
+    expect(
+      assignedPersonForTask(TASKS[0]!, TASKS, new Date("2026-08-16T12:00:00+02:00"), [], accepted),
+    ).toBe(assignedPersonForTask(TASKS[0]!, TASKS, new Date("2026-08-16T12:00:00+02:00")));
   });
 
   test("adds making the bed as a one-point on-demand task for either person", () => {
