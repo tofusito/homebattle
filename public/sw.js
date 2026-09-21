@@ -1,14 +1,14 @@
-const CACHE = "happy-home-v7";
+const CACHE = "happy-home-v9";
 // Con red lenta no esperamos al timeout del sistema: pasado este margen se
 // sirve el shell cacheado y la red sigue su curso en segundo plano.
 const NAVIGATION_TIMEOUT_MS = 3500;
 const SHELL = [
   "/",
   "/manifest.webmanifest",
-  "/favicon-home-sparkle.png",
-  "/apple-touch-icon.png",
-  "/icons/icon-home-sparkle-192.png",
-  "/icons/icon-home-sparkle-512.png",
+  "/icons/happy-home-sky-64.png",
+  "/icons/happy-home-sky-180.png",
+  "/icons/happy-home-sky-192.png",
+  "/icons/happy-home-sky-512.png",
 ];
 
 self.addEventListener("install", (event) => {
@@ -92,8 +92,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title || "Happy Home", {
       body: payload.body || "La casa tiene algo amable que recordarte.",
-      icon: "/icons/icon-home-sparkle-192.png",
-      badge: "/icons/icon-home-sparkle-192.png",
+      icon: "/icons/happy-home-sky-192.png",
+      badge: "/icons/happy-home-sky-192.png",
       tag: payload.tag || "happy-home-reminder",
       data: { url: payload.url || "/" },
     }),
